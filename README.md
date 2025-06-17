@@ -84,4 +84,3 @@ Workflow
 Summary
 This documentation ensures structured contributions from Interns to Sr. QA while minimizing conflicts and enforcing quality. Each level reviews and builds upon the previous, aligning with CI/CD best practices.
 
-![Uploading image.png…]()
