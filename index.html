@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Automation CI/CD Workflow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-page, vertical-flow dashboard. The core is an interactive process diagram representing the DEV -> SIT -> UAT workflow. This structure was chosen over a linear document to allow users (Interns, Jr. QA, Sr. QA) to immediately access information relevant to their specific role without scrolling through unrelated content. Users click a role in the visual workflow, and a detailed panel appears with their specific tasks, guidelines, and code snippets. This task-oriented, non-linear approach enhances usability by reducing cognitive load and providing context-specific information on demand. A summary chart provides a high-level overview of the process stages. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Overall Process -> Goal: Organize & Inform -> Viz/Method: Interactive Flow Diagram (HTML/CSS cards) -> Interaction: Click to reveal role-specific detail panels -> Justification: Visually represents the flow of work and allows for focused, on-demand information access, which is more intuitive than a static text document.
+        - Report Info: Environment Roles -> Goal: Compare -> Viz/Method: Donut Chart (Chart.js) -> Interaction: Hover to see role details -> Justification: Provides a quick, scannable summary of the workflow's structural division among roles.
+        - Report Info: Git Commands -> Goal: Task-Oriented -> Viz/Method: Pre-formatted code blocks -> Interaction: "Copy to Clipboard" button -> Justification: Improves efficiency and reduces error for users needing to execute commands.
+        - Report Info: Workflow steps for each role -> Goal: Inform -> Viz/Method: Accordion-style content panels -> Interaction: Show/hide on click -> Justification: Prevents information overload by displaying only the selected role's details at one time. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: auto;
+            max-height: 400px;
+        }
+        .flow-arrow {
+            color: #d1d5db; /* gray-300 */
+            align-self: center;
+        }
+        .code-block {
+            background-color: #282c34; /* Darker code background */
+            color: #abb2bf; /* Lighter code text */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            position: relative;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #4b5563; /* gray-600 */
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #6b7280; /* gray-500 */
+        }
+        [data-role-details] {
+            transition: all 0.5s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+        [data-role-details].active {
+            max-height: 1500px; /* Generous height for content */
+            opacity: 1;
+        }
+        .role-card {
+            min-height: 180px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .role-card.active {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+         #intern-card.active { border-color: #3b82f6; } /* blue-500 */
+         #jr-card.active { border-color: #f59e0b; } /* amber-500 */
+         #sr-card.active { border-color: #ef4444; } /* red-500 */
+    </style>
+</head>
+<body class="bg-[#fdfcfb] text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#2c3e50]">QA Automation CI/CD Workflow</h1>
+            <p class="text-lg text-gray-600 mt-2">An interactive guide to the development, testing, and deployment lifecycle.</p>
+        </header>
+
+        <!-- Overview Section -->
+        <section id="overview" class="mb-12 bg-white p-6 rounded-lg shadow-sm">
+            <h2 class="text-2xl font-bold text-[#2c3e50] mb-4">How This Works</h2>
+            <p class="text-gray-700 leading-relaxed mb-6">
+                This application visualizes the QA automation workflow, clarifying the roles and responsibilities for each stage of the process—from initial test creation to final approval. The primary tools are Katalon Studio for scripting and Git for version control. Below is a high-level breakdown of the workflow stages.
+            </p>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                <div class="md:w-1/2">
+                    <h3 class="text-xl font-semibold text-[#2c3e50] mb-3">Core Tools</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-blue-100 text-blue-600 p-2 rounded-full">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Katalon Studio</h4>
+                                <p class="text-gray-600">For automation scripting and execution.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                             <div class="bg-green-100 text-green-600 p-2 rounded-full">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Git</h4>
+                                <p class="text-gray-600">For version control and collaboration.</p>
+                            </div>
+                        </div>
+                         <div class="flex items-center gap-4">
+                            <div class="bg-purple-100 text-purple-600 p-2 rounded-full">
+                               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">CI/CD Pipeline (Optional)</h4>
+                                <p class="text-gray-600">For automated execution across environments.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <div class="md:w-1/2">
+                    <h3 class="text-xl font-semibold text-center text-[#2c3e50] mb-3">Workflow Stages</h3>
+                    <div class="chart-container">
+                        <canvas id="rolesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Workflow Section -->
+        <section id="workflow">
+             <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-[#2c3e50]">The Interactive Workflow</h2>
+                <p class="text-gray-600 mt-2">Click on a role to see detailed responsibilities and actions.</p>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row justify-center items-stretch gap-4 lg:gap-0">
+                <!-- Intern QA -->
+                <div class="w-full lg:w-1/3 p-2">
+                    <div id="intern-card" class="role-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-role="intern">
+                        <div>
+                            <span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full mb-3">DEV Environment</span>
+                            <h3 class="text-xl font-bold">Intern QA</h3>
+                            <p class="text-gray-600 mt-1">Develop and push feature-based automated tests.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-4xl font-light flow-arrow transform rotate-90 lg:rotate-0">→</div>
+
+                <!-- Jr. QA -->
+                <div class="w-full lg:w-1/3 p-2">
+                    <div id="jr-card" class="role-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-role="jr">
+                         <div>
+                            <span class="inline-block bg-amber-100 text-amber-800 text-sm font-semibold px-3 py-1 rounded-full mb-3">SIT Environment</span>
+                            <h3 class="text-xl font-bold">Jr. QA</h3>
+                            <p class="text-gray-600 mt-1">Review, refine, and validate intern scripts.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-4xl font-light flow-arrow transform rotate-90 lg:rotate-0">→</div>
+
+                <!-- Sr. QA -->
+                <div class="w-full lg:w-1/3 p-2">
+                    <div id="sr-card" class="role-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-role="sr">
+                         <div>
+                            <span class="inline-block bg-red-100 text-red-800 text-sm font-semibold px-3 py-1 rounded-full mb-3">UAT Environment</span>
+                            <h3 class="text-xl font-bold">Sr. QA</h3>
+                            <p class="text-gray-600 mt-1">Final approval, integration, and CI/CD.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Details Section -->
+        <section id="details" class="mt-6">
+            <!-- Intern Details -->
+            <div id="intern-details" data-role-details>
+                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                    <h3 class="text-2xl font-bold mb-3 text-blue-800">Intern QA: DEV Environment Details</h3>
+                    <p class="mb-4"><strong>Purpose:</strong> Develop initial test cases using Record & Run in Katalon. Work locally and push only your assigned feature test files.</p>
+                    <h4 class="text-lg font-semibold mb-2">Workflow Steps:</h4>
+                    <ol class="list-decimal list-inside space-y-2 mb-4">
+                        <li><strong>Open Katalon Studio:</strong> Use a clean local Katalon project.</li>
+                        <li><strong>Create Test Cases via Record & Run:</strong> Save tests under <code>/Test Cases/FeatureName/</code>.</li>
+                        <li><strong>Test Locally:</strong> Run and validate locally before pushing.</li>
+                        <li><strong>Push Specific Folders to Git:</strong></li>
+                    </ol>
+                    <div class="code-block">
+                        <button class="copy-btn">Copy</button>
+                        <pre><code>git init
+git add "Test Cases/YourFeature"
+git add "Object Repository/YourFeature"
+git add "Test Suites/Intern/YourFeature"
+git commit -m "Added [Feature] test automation by [Your Name] "
+git push origin dev</code></pre>
+                    </div>
+                    <h4 class="text-lg font-semibold mt-4 mb-2">Folder Naming Guidelines:</h4>
+                    <ul class="list-disc list-inside">
+                        <li><strong>Feature Folder:</strong> Use clear, lowercase names (e.g., <code>login</code>, <code>registration</code>).</li>
+                        <li><strong>Test Case:</strong> Use format <code>[Platform]_[Function/Module]_[Action or Condition]</code> (e.g., <code>Web_Login_ValidCredentials</code>).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Jr. Details -->
+            <div id="jr-details" data-role-details>
+                <div class="bg-amber-50 p-6 rounded-lg border border-amber-200">
+                    <h3 class="text-2xl font-bold mb-3 text-amber-800">Jr. QA: SIT Environment Details</h3>
+                    <p class="mb-4"><strong>Purpose:</strong> Review, execute, and refactor intern test cases for the SIT environment.</p>
+                    <h4 class="text-lg font-semibold mb-2">Workflow Steps:</h4>
+                    <ol class="list-decimal list-inside space-y-2 mb-4">
+                        <li><strong>Pull from `dev` Branch:</strong> Review newly added folders and files.</li>
+                        <li><strong>Run in Katalon Studio:</strong> Validate functionality in SIT configuration.</li>
+                        <li><strong>Refactor Tests:</strong> Improve object naming, remove redundant steps, and add validations.</li>
+                        <li><strong>Move Tests to SIT Folder:</strong> Reorganize files into the SIT directory structure.</li>
+                        <li><strong>Push to `sit` Branch:</strong></li>
+                    </ol>
+                    <div class="code-block">
+                        <button class="copy-btn">Copy</button>
+                        <pre><code>git checkout -b sit
+git add "Test Cases/SIT/FeatureName"
+git add "Object Repository/SIT/FeatureName"
+git add "Test Suites/SIT/FeatureName"
+git commit -m "Refined [Feature] test scripts"
+git push origin sit</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sr. Details -->
+            <div id="sr-details" data-role-details>
+                <div class="bg-red-50 p-6 rounded-lg border border-red-200">
+                    <h3 class="text-2xl font-bold mb-3 text-red-800">Sr. QA: UAT Environment Details</h3>
+                    <p class="mb-4"><strong>Purpose:</strong> Conduct final validation, prepare for release, and manage CI/CD integration.</p>
+                    <h4 class="text-lg font-semibold mb-2">Workflow Steps:</h4>
+                    <ol class="list-decimal list-inside space-y-2 mb-4">
+                        <li><strong>Pull from `sit` Branch:</strong> Import reviewed test cases.</li>
+                        <li><strong>Run & Validate in UAT:</strong> Configure data and environment-specific settings.</li>
+                        <li><strong>Finalize Tests in UAT Folder:</strong> Move all finalized artifacts to the UAT directory.</li>
+                        <li><strong>Push to `uat` Branch:</strong></li>
+                    </ol>
+                    <div class="code-block">
+                        <button class="copy-btn">Copy</button>
+                        <pre><code>git checkout -b uat
+git add "Test Cases/UAT/FeatureName"
+git add "Object Repository/UAT/FeatureName"
+git add "Test Suites/UAT/FeatureName"
+git commit -m "Finalized [Feature] for UAT"
+git push origin uat</code></pre>
+                    </div>
+                    <h4 class="text-lg font-semibold mt-4 mb-2">CI/CD Integration (Optional):</h4>
+                     <ul class="list-disc list-inside">
+                        <li>Trigger automated test runs in Jenkins/GitHub Actions.</li>
+                        <li>Monitor UAT execution reports for final sign-off.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const roleCards = document.querySelectorAll('.role-card');
+            const detailPanels = document.querySelectorAll('[data-role-details]');
+
+            roleCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const role = card.dataset.role;
+                    const targetPanel = document.getElementById(`${role}-details`);
+                    const isAlreadyActive = card.classList.contains('active');
+                    
+                    // Reset all states
+                    roleCards.forEach(c => c.classList.remove('active'));
+                    detailPanels.forEach(p => p.classList.remove('active'));
+
+                    // Activate the clicked one if it wasn't already active
+                    if (!isAlreadyActive) {
+                        card.classList.add('active');
+                        targetPanel.classList.add('active');
+                    }
+                });
+            });
+
+            // Copy button functionality
+            document.querySelectorAll('.copy-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent card click event when button is clicked
+                    const codeBlock = button.nextElementSibling;
+                    const code = codeBlock.innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        button.innerText = 'Copied!';
+                        setTimeout(() => {
+                            button.innerText = 'Copy';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy: ', err);
+                    });
+                });
+            });
+            
+            // Chart.js implementation
+            const ctx = document.getElementById('rolesChart').getContext('2d');
+            const rolesChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Intern QA (DEV)', 'Jr. QA (SIT)', 'Sr. QA (UAT)'],
+                    datasets: [{
+                        label: 'Workflow Stages',
+                        data: [1, 1, 1],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',  // blue-500
+                            'rgba(245, 158, 11, 0.8)', // amber-500
+                            'rgba(239, 68, 68, 0.8)'    // red-500
+                        ],
+                        borderColor: [
+                            '#ffffff'
+                        ],
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 12 },
+                                color: '#374151'
+                            }
+                        },
+                        tooltip: { enabled: false }
+                    },
+                    cutout: '60%'
+                }
+            });
+        });
+    </script>
+</body>
+</html>
